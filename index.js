@@ -29,12 +29,28 @@ async function run() {
         const categoriesCollection = client
             .db("reGame")
             .collection("categories");
+        const soloCategoriesCollection = client
+            .db("reGame")
+            .collection("solocategory");
 
         app.get('/categories', async(req, res) => {
             const query = {};
             const options = await categoriesCollection.find(query).toArray();
             res.send(options)
         })    
+
+        app.get('/category', async(req, res) => {
+            let query = {}
+            if(req.query.service_id){
+                query = {
+                    service_id: req.query.service_id
+                }
+            }
+
+            const cursor = soloCategoriesCollection.find(query)
+            result = await cursor.toArray()
+            res.send(result)
+        })
     }
     finally{
 
