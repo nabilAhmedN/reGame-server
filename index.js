@@ -71,6 +71,12 @@ async function run() {
             res.send(result);
         });
 
+        app.post('/signup', async(req, res) => {
+            const addUser = req.body
+            const result = await userCollection.insertOne(addUser)
+            res.send(result)
+        })
+
         
     }
     finally{
