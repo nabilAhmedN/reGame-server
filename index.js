@@ -77,7 +77,23 @@ async function run() {
             res.send(result)
         })
 
-        
+        app.put('/login', async(req, res) => {
+            const user = req.body
+            const filter = {email: user.email}
+
+            const option = {upsert: true};
+            const updateUser ={
+                $set: {
+                    name: user.name,
+                    email: user.email,
+                    role: user.role
+                }
+                
+            }
+            const result = await userCollection.updateOne(filter, updateUser, option)
+
+            res.send(result)
+        })
     }
     finally{
 
