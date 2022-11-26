@@ -29,9 +29,18 @@ async function run() {
         const categoriesCollection = client
             .db("reGame")
             .collection("categories");
+
         const soloCategoriesCollection = client
             .db("reGame")
             .collection("solocategory");
+
+        const bookingsGameCollection = client
+            .db("reGame")
+            .collection("bookingsGame");
+
+        const userCollection = client
+            .db("reGame")
+            .collection("userTable");
 
         app.get('/categories', async(req, res) => {
             const query = {};
@@ -51,6 +60,18 @@ async function run() {
             result = await cursor.toArray()
             res.send(result)
         })
+
+        // post the modal data
+        app.post("/bookingsgame", async (req, res) => {
+            const bookingGame = req.body;
+            console.log(bookingGame);
+            const result = await bookingsGameCollection.insertOne(
+                bookingGame
+            );
+            res.send(result);
+        });
+
+        
     }
     finally{
 
