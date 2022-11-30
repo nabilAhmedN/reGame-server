@@ -59,7 +59,6 @@ async function run() {
 
         const paymentsCollection = client.db("reGame").collection("payments");
 
-
         app.get("/categories", async (req, res) => {
             const query = {};
             const options = await categoriesCollection.find(query).toArray();
@@ -68,9 +67,9 @@ async function run() {
 
         app.get("/category", async (req, res) => {
             let query = {};
-            if (req.query.service_id) {
+            if (req.query.title) {
                 query = {
-                    service_id: req.query.service_id,
+                    title: req.query.title,
                 };
             }
 
@@ -105,11 +104,19 @@ async function run() {
         app.get("/bookingsgame", verifyJWT, async (req, res) => {
             const email = req.query.email;
             const decodedEmail = req.decoded.email;
-            if(email !== decodedEmail){
-                return res.status(403).send({message: 'Forbidden asscess'})
+            if (email !== decodedEmail) {
+                return res.status(403).send({ message: "Forbidden asscess" });
             }
             const query = { email: email };
             const result = await bookingsGameCollection.find(query).toArray();
+            res.send(result);
+        });
+        // add the product
+        app.post("/addproduct", async (req, res) => {
+            const addProduct = req.body;
+            console.log(addProduct);
+            const result = await soloCategoriesCollection.insertOne(addProduct);
+
             res.send(result);
         });
 
@@ -121,7 +128,7 @@ async function run() {
             res.send(booking);
         });
 
-        // TODO: paymet 
+        // TODO: paymet
         app.post("/create-payment-intent", async (req, res) => {
             const booking = req.body;
             const price = booking.price;
@@ -138,24 +145,23 @@ async function run() {
         });
 
         // TODO: payment
-        app.post('/payments', async (req, res) =>{
+        app.post("/payments", async (req, res) => {
             const payment = req.body;
             const result = await paymentsCollection.insertOne(payment);
-            const id = payment.bookingId
-            const filter = {_id: ObjectID(id)}
+            const id = payment.bookingId;
+            const filter = { _id: ObjectID(id) };
             const updatedDoc = {
                 $set: {
                     paid: true,
-                    transactionId: payment.transactionId
-                }
-            }
+                    transactionId: payment.transactionId,
+                },
+            };
             const updatedResult = await bookingsGameCollection.updateOne(
                 filter,
                 updatedDoc
             );
             res.send(result);
-        })
-
+        });
 
         app.get("/users", async (req, res) => {
             let query = {};
@@ -195,63 +201,134 @@ async function run() {
             );
 
             res.send(result);
+        });
 
-            
-            });
+        // show all user
+        app.get("/allrole", async (req, res) => {
+            let query = {};
+            if (req.query.role) {
+                query = {
+                    role: req.query.role,
+                };
+            } else if (req.query.email) {
+                query = {
+                    email: req.query.email,
+                };
+            }
+            const cursor = userCollection.find(query);
+            const result = await cursor.toArray();
 
-            // show all user
-            app.get("/allrole", async (req, res) => {
-                let query = {};
-                if (req.query.role) {
-                    query = {
-                        role: req.query.role,
-                    };
-                } else if (req.query.email) {
-                    query = {
-                        email: req.query.email,
-                    };
-                }
-                const cursor = userCollection.find(query);
-                const result = await cursor.toArray();
+            res.send(result);
 
-                res.send(result);
+            // //
+            // app.put("/allrole/admin/:id", verifyJWT, async (req, res) => {
+            //     const decodedEmail = req.decoded?.email;
+            //     const query = { email: decodedEmail };
+            //     const user = await userCollection.findOne(query);
+            //     if (user?.role !== "admin") {
+            //         return res
+            //             .status(403)
+            //             .send({ message: "forbidden access" });
+            //     }
+            //     const id = req.params.id;
+            //     const filter = { _id: ObjectID(id) };
+            //     const options = { upsert: true };
+            //     const updatedDoc = {
+            //         $set: {
+            //             role: "admin",
+            //         },
+            //     };
+            //     const result = await userCollection.updateOne(
+            //         filter,
+            //         updatedDoc,
+            //         options
+            //     );
+            //     res.send(result);
+            // });
 
-                //
-                app.put("/allrole/admin/:id", verifyJWT, async (req, res) => {
-                    const decodedEmail = req.decoded?.email;
-                    const query = { email: decodedEmail };
-                    const user = await userCollection.findOne(query);
-                    if (user?.role !== "admin") {
-                        return res
-                            .status(403)
-                            .send({ message: "forbidden access" });
-                    }
-                    const id = req.params.id;
-                    const filter = { _id: ObjectID(id) };
-                    const options = { upsert: true };
-                    const updatedDoc = {
-                        $set: {
-                            role: "admin",
-                        },
-                    };
-                    const result = await userCollection.updateOne(
-                        filter,
-                        updatedDoc,
-                        options
-                    );
-                    res.send(result);
-                });
+            // // admin
+            // app.get("/users/admin/:email", async (req, res) => {
+            //     const email = req.params.email;
+            //     const query = { email };
+            //     const user = await userCollection.findOne(query);
+            //     res.send({ admin: user?.role === "admin" });
+            // });
+        });
+        //
+        app.put("/allrole/admin/:id", verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded?.email;
+            const query = { email: decodedEmail };
+            const user = await userCollection.findOne(query);
+            if (user?.role !== "admin") {
+                return res.status(403).send({ message: "forbidden access" });
+            }
+            const id = req.params.id;
+            const filter = { _id: ObjectID(id) };
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    role: "admin",
+                },
+            };
+            const result = await userCollection.updateOne(
+                filter,
+                updatedDoc,
+                options
+            );
+            res.send(result);
+        });
 
+        // admin
+        app.get("/users/admin/:email", async (req, res) => {
+            const email = req.params.email;
+            const query = { email };
+            const user = await userCollection.findOne(query);
+            res.send({ admin: user?.role === "admin" });
+        });
+        //seller
+        app.get("/users/seller/:email", async (req, res) => {
+            const email = req.params.email;
+            const query = { email };
+            const user = await userCollection.findOne(query);
+            res.send({ seller: user?.role === "Seller" });
+        });
 
-                // admin
-                app.get("/users/admin/:email", async (req, res) => {
-                    const email = req.params.email;
-                    const query = { email };
-                    const user = await userCollection.findOne(query);
-                    res.send({ admin: user?.role === "admin" });
-                });
-            });
-    } finally {
+        // buyer added product
+        app.get("/mydata", async (req, res) => {
+            let query = {};
+            if (req.query.email) {
+                query = {
+                    email: req.query.email,
+                };
+            } else if (req.query.advertise) {
+                query = {
+                    advertise: req.query.advertise,
+                };
+            }
+            const cursor = soloCategoriesCollection.find(query);
+            const result = await cursor.toArray();
+
+            res.send(result);
+        });
+
+        // advertise update
+        app.patch("/advertiseupdate/:id", async (req, res) => {
+            const id = req.params.id;
+            const advertise = req.body.advertise;
+            const query = { _id: ObjectID(id) };
+            const updatedDoc = {
+                $set: {
+                    advertise: advertise,
+                },
+            };
+            const result = await soloCategoriesCollection.updateOne(
+                query,
+                updatedDoc
+            );
+            res.send(result);
+        });
+    } 
+    finally {
     }
 }
 run().catch(console.log);
