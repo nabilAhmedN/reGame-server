@@ -14,8 +14,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
-const { ObjectID } = require("bson");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+// const { ObjectID } = require("bson");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.0byrl94.mongodb.net/?retryWrites=true&w=majority`;
 console.log(uri);
 const client = new MongoClient(uri, {
@@ -84,7 +84,7 @@ async function run() {
             const user = await userCollection.findOne(query);
             if (user) {
                 const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {
-                    expiresIn: "1h",
+                    expiresIn: "7d",
                 });
                 return res.send({ accessToken: token });
             }
@@ -103,7 +103,7 @@ async function run() {
 
         app.get("/bookingsgame", verifyJWT, async (req, res) => {
             const email = req.query.email;
-            const decodedEmail = req.decoded.email;
+            const decodedEmail = req.decoded?.email;
             if (email !== decodedEmail) {
                 return res.status(403).send({ message: "Forbidden asscess" });
             }
@@ -123,7 +123,7 @@ async function run() {
         //TODO: demo payment
         app.get("/bookings/:id", async (req, res) => {
             const id = req.params.id;
-            const query = { _id: ObjectID(id) };
+            const query = { _id: ObjectId(id) };
             const booking = await bookingsGameCollection.findOne(query);
             res.send(booking);
         });
@@ -149,7 +149,7 @@ async function run() {
             const payment = req.body;
             const result = await paymentsCollection.insertOne(payment);
             const id = payment.bookingId;
-            const filter = { _id: ObjectID(id) };
+            const filter = { _id: ObjectId(id) };
             const updatedDoc = {
                 $set: {
                     paid: true,
@@ -219,40 +219,6 @@ async function run() {
             const result = await cursor.toArray();
 
             res.send(result);
-
-            // //
-            // app.put("/allrole/admin/:id", verifyJWT, async (req, res) => {
-            //     const decodedEmail = req.decoded?.email;
-            //     const query = { email: decodedEmail };
-            //     const user = await userCollection.findOne(query);
-            //     if (user?.role !== "admin") {
-            //         return res
-            //             .status(403)
-            //             .send({ message: "forbidden access" });
-            //     }
-            //     const id = req.params.id;
-            //     const filter = { _id: ObjectID(id) };
-            //     const options = { upsert: true };
-            //     const updatedDoc = {
-            //         $set: {
-            //             role: "admin",
-            //         },
-            //     };
-            //     const result = await userCollection.updateOne(
-            //         filter,
-            //         updatedDoc,
-            //         options
-            //     );
-            //     res.send(result);
-            // });
-
-            // // admin
-            // app.get("/users/admin/:email", async (req, res) => {
-            //     const email = req.params.email;
-            //     const query = { email };
-            //     const user = await userCollection.findOne(query);
-            //     res.send({ admin: user?.role === "admin" });
-            // });
         });
         //
         app.put("/allrole/admin/:id", verifyJWT, async (req, res) => {
@@ -263,7 +229,7 @@ async function run() {
                 return res.status(403).send({ message: "forbidden access" });
             }
             const id = req.params.id;
-            const filter = { _id: ObjectID(id) };
+            const filter = { _id: ObjectId(id) };
             const options = { upsert: true };
             const updatedDoc = {
                 $set: {
@@ -315,7 +281,7 @@ async function run() {
         app.patch("/advertiseupdate/:id", async (req, res) => {
             const id = req.params.id;
             const advertise = req.body.advertise;
-            const query = { _id: ObjectID(id) };
+            const query = { _id: ObjectId(id) };
             const updatedDoc = {
                 $set: {
                     advertise: advertise,
@@ -331,7 +297,7 @@ async function run() {
         // delete product
         app.delete("/deleteproduct/:id", async (req, res) => {
             const id = req.params.id;
-            const query = { _id: ObjectID(id) };
+            const query = { _id: ObjectId(id) };
 
             const result = await soloCategoriesCollection.deleteOne(query);
             res.send(result);
@@ -340,11 +306,73 @@ async function run() {
         // delete user
         app.delete("/deleteuser/:id", async (req, res) => {
             const id = req.params.id;
-            const query = { _id: ObjectID(id) };
+            const query = { _id: ObjectId(id) };
 
             const result = await userCollection.deleteOne(query);
             res.send(result);
         });
+
+        // verify 
+        app.patch("/verifiedupdate/:id", async (req, res) => {
+            const id = req.params.id;
+            const verified = req.body.verified;
+            const query = { _id: ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    verified: verified,
+                },
+            };
+            const result = await userCollection.updateOne(query, updatedDoc);
+            res.send(result);
+        });
+        app.patch("/verifiedcataupdate/:email", async (req, res) => {
+            const email = req.params.email;
+            const verified = req.body.verified;
+            const query = { email: email };
+            const updatedDoc = {
+                $set: {
+                    verified: verified,
+                },
+            };
+            const result = await soloCategoriesCollection.updateMany(
+                query,
+                updatedDoc
+            );
+            res.send(result);
+        });
+
+        // report
+        // app.patch("/reportupdate/:id", async (req, res) => {
+        //     const id = req.params.id;
+        //     const report = req.body.report;
+        //     const query = { _id: ObjectId(id) };
+        //     const updatedDoc = {
+        //         $set: {
+        //             report: report,
+        //         },
+        //     };
+        //     const result = await soloCategoriesCollection.updateOne(
+        //         query,
+        //         updatedDoc
+        //     );
+        //     res.send(result);
+        // });
+        
+        // // report
+        // app.get("/allproduct", async (req, res) => {
+        //     let query = {};
+        //     if (req.query.report) {
+        //         query = {
+        //             report: req.query.report,
+        //         };
+        //     }
+
+        //     const cursor = soloCategoriesCollection.find(query);
+        //     const result = await cursor.toArray();
+
+        //     res.send(result);
+        // });
+
     } 
     finally {
     }
