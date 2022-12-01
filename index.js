@@ -327,6 +327,24 @@ async function run() {
             );
             res.send(result);
         });
+
+        // delete product
+        app.delete("/deleteproduct/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectID(id) };
+
+            const result = await soloCategoriesCollection.deleteOne(query);
+            res.send(result);
+        });
+
+        // delete user
+        app.delete("/deleteuser/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectID(id) };
+
+            const result = await userCollection.deleteOne(query);
+            res.send(result);
+        });
     } 
     finally {
     }
