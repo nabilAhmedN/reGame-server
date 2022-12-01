@@ -342,36 +342,36 @@ async function run() {
         });
 
         // report
-        // app.patch("/reportupdate/:id", async (req, res) => {
-        //     const id = req.params.id;
-        //     const report = req.body.report;
-        //     const query = { _id: ObjectId(id) };
-        //     const updatedDoc = {
-        //         $set: {
-        //             report: report,
-        //         },
-        //     };
-        //     const result = await soloCategoriesCollection.updateOne(
-        //         query,
-        //         updatedDoc
-        //     );
-        //     res.send(result);
-        // });
+        app.patch("/reportupdate/:id", async (req, res) => {
+            const id = req.params.id;
+            const report = req.body.report;
+            const query = { _id: ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    report: report,
+                },
+            };
+            const result = await soloCategoriesCollection.updateOne(
+                query,
+                updatedDoc
+            );
+            res.send(result);
+        });
         
-        // // report
-        // app.get("/allproduct", async (req, res) => {
-        //     let query = {};
-        //     if (req.query.report) {
-        //         query = {
-        //             report: req.query.report,
-        //         };
-        //     }
+        // report
+        app.get("/allproduct", async (req, res) => {
+            let query = {};
+            if (req.query.report) {
+                query = {
+                    report: req.query.report,
+                };
+            }
 
-        //     const cursor = soloCategoriesCollection.find(query);
-        //     const result = await cursor.toArray();
+            const cursor = soloCategoriesCollection.find(query);
+            const result = await cursor.toArray();
 
-        //     res.send(result);
-        // });
+            res.send(result);
+        });
 
     } 
     finally {
