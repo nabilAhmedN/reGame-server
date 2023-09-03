@@ -15,9 +15,8 @@ app.use(cors());
 app.use(express.json());
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-// const { ObjectID } = require("bson");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.0byrl94.mongodb.net/?retryWrites=true&w=majority`;
-console.log(uri);
+// console.log(uri);
 const client = new MongoClient(uri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -28,18 +27,19 @@ function verifyJWT(req, res, next) {
     console.log("token inside verifyJWT", req.headers.authorization);
     const authHeader = req.headers.authorization;
     if (!authHeader) {
-        return res.status(401).send("unauthorized access");
+      return res.status(401).send("unauthorized access");
     }
     const token = authHeader.split(" ")[1];
-
+  
     jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
-        if (err) {
-            return res.status(403).send({ message: "forbidden access" });
-        }
-        req.decoded = decoded;
-        next();
+      if (err) {
+        console.log(err);
+        return res.status(403).send({ message: "forbidden access2" });
+      }
+      req.decoded = decoded;
+      next();
     });
-}
+  }
 
 async function run() {
     try {
@@ -78,43 +78,59 @@ async function run() {
             res.send(result);
         });
 
+        // app.get("/jwt", async (req, res) => {
+        //     const email = req.query.email;
+        //     const query = { email: email };
+        //     const user = await userCollection.findOne(query);
+        //     if (user) {
+        //         const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {
+        //             expiresIn: "7d",
+        //         });
+        //         return res.send({ accessToken: token });
+        //     }
+        //     res.status(403).send({ accessToken: "token" });
+
+        //     console.log(user);
+        // });
+
         app.get("/jwt", async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
             const user = await userCollection.findOne(query);
             if (user) {
-                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {
-                    expiresIn: "7d",
-                });
-                return res.send({ accessToken: token });
+              const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {
+                expiresIn: "30d",
+              });
+              console.log(token);
+              return res.send({ accessToken: token });
             }
             res.status(403).send({ accessToken: "" });
-
-            // console.log(user);
-        });
+            console.log(user)
+          });
 
         // post the modal data
         app.post("/bookingsgame", async (req, res) => {
             const bookingGame = req.body;
-            console.log(bookingGame);
+            // console.log(bookingGame);
             const result = await bookingsGameCollection.insertOne(bookingGame);
             res.send(result);
         });
 
-        app.get("/bookingsgame", verifyJWT, async (req, res) => {
+        app.get("/bookingsgame", async (req, res) => {
             const email = req.query.email;
-            const decodedEmail = req.decoded?.email;
-            if (email !== decodedEmail) {
-                return res.status(403).send({ message: "Forbidden asscess" });
-            }
+            // const decodedEmail = req.decoded?.email;
+            // if (email !== decodedEmail) {
+            //     return res.status(403).send({ message: "Forbidden asscess" });
+            // }
             const query = { email: email };
             const result = await bookingsGameCollection.find(query).toArray();
             res.send(result);
         });
+
         // add the product
         app.post("/addproduct", async (req, res) => {
             const addProduct = req.body;
-            console.log(addProduct);
+            // console.log(addProduct);
             const result = await soloCategoriesCollection.insertOne(addProduct);
 
             res.send(result);
@@ -163,7 +179,19 @@ async function run() {
             res.send(result);
         });
 
-        app.get("/users", async (req, res) => {
+        // TODO: my previous work
+        // app.get("/users", async (req, res) => {
+        //     let query = {};
+        //     if (req.query.role) {
+        //         query = {
+        //             role: req.query.role,
+        //         };
+        //     }
+        //     const allUsers = await userCollection.find(query).toArray();
+        //     res.send(allUsers);
+        // });
+
+        app.get("/allUsers", async (req, res) => {
             let query = {};
             if (req.query.role) {
                 query = {
