@@ -4,17 +4,17 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
-// console.log(stripe)
+const colors = require('colors')
 
-// App creation and port
+//TODO: App creation and port
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Middle Wares
+//TODO: Middle Wares
 app.use(cors());
 app.use(express.json());
 
-// JWT verification process
+//TODO: JWT verification process
 function verifyJwt(req, res, next) {
     // console.log('token inside verifyJwt', req.headers.authorization)
     const authHeader = req.headers.authorization
@@ -44,17 +44,14 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-        // all database collection
+        //TODO: all database collection
         const usersCollection = client.db('reGameDB').collection('users');
-        // const newsLetterCollection = client.db('reGameDB').collection('newsLetter');
         const allProductsCollection = client.db('reGameDB').collection('allProducts');
         const productsCategoryCollection = client.db('reGameDB').collection('productsCategory');
         const bookedProductCollection = client.db('reGameDB').collection('bookedProduct');
         const productSoldCollection = client.db('reGameDB').collection('productSold');
-        // const blogCollection = client.db('reGameDB').collection('blogs');
-        // const allProductCollection = 
 
-        // User verification via server Admin, Buyer & Seller
+        //TODO: User verification via server Admin, Buyer & Seller
         const verifyAdmin = async (req, res, next) => {
             const decodedEmail = req.decoded.email;
             const query = { email: decodedEmail };
@@ -87,7 +84,7 @@ async function run() {
         }
 
 
-        // jwt token issued from here
+        //TODO: jwt token issued from here
         app.get('/jwt', async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
@@ -98,12 +95,8 @@ async function run() {
             }
             res.status(403).send({ accessToken: '' })
         })
-        app.get('/blog', async (req, res) => {
-            const query = {}
-            const blogs = await blogCollection.find(query).toArray()
-            res.send(blogs)
-        }) 
-        // Payment route for Stripe Payment
+
+        //TODO: Payment route for Stripe Payment
         app.post('/create-payment-intent', async (req, res) => {
             const booking = req.body;
             // console.log(booking)
@@ -145,12 +138,12 @@ async function run() {
         })
 
         // newsLetter API, email collection
-        app.post('/newsLetterEmails', async (req, res) => {
-            const email = req.body;
-            // console.log(email)
-            const newsLetterEmail = await newsLetterCollection.insertOne(email)
-            res.send(newsLetterEmail)
-        })
+        // app.post('/newsLetterEmails', async (req, res) => {
+        //     const email = req.body;
+        //     // console.log(email)
+        //     const newsLetterEmail = await newsLetterCollection.insertOne(email)
+        //     res.send(newsLetterEmail)
+        // })
 
 
         // User route for updating user of firebase inside server user database
@@ -224,13 +217,13 @@ async function run() {
 
         app.delete('/users/sellers/:id', verifyJwt, verifyAdmin, async (req, res) => {
             const id = req.params.id;
-            const filter = { _id: ObjectId(id) }
+            const filter = { _id: new ObjectId(id) }
             const result = await usersCollection.deleteOne(filter)
             res.send(result)
         })
         app.delete('/users/buyers/:id', verifyJwt, verifyAdmin, async (req, res) => {
             const id = req.params.id;
-            const filter = { _id: ObjectId(id) }
+            const filter = { _id: new ObjectId(id) }
             const result = await usersCollection.deleteOne(filter)
             res.send(result)
         })
@@ -243,7 +236,7 @@ async function run() {
                 return res.status(403).send({ message: 'forbidden access, your not an Admin' })
             }
             const id = req.params.id;
-            const filter = { _id: ObjectId(id) };
+            const filter = { _id: new ObjectId(id) };
             const options = { upsert: true };
             const updateDoc = {
                 $set: {
@@ -305,7 +298,7 @@ async function run() {
                 return res.status(403).send({ message: 'forbidden access, your not an Admin' })
             }
             const id = req.params.id;
-            const filter = { _id: ObjectId(id) };
+            const filter = { _id: new ObjectId(id) };
             const options = { upsert: true };
             const updateDoc = {
                 $set: {
@@ -346,7 +339,7 @@ async function run() {
 
         app.put('/allProducts/:id', verifyJwt, verifyBuyer, async (req, res) => {
             const id = req.params.id
-            const query = { _id: ObjectId(id) }
+            const query = { _id: new ObjectId(id) }
             const options = { upsert: true }
             const updateDoc = {
                 $set: {
@@ -365,7 +358,7 @@ async function run() {
         })
         app.delete('/reportedItems/:id', verifyJwt, verifyAdmin, async (req, res) => {
             const id = req.params.id
-            const query = { _id: ObjectId(id) }
+            const query = { _id: new ObjectId(id) }
             const deleteReportedItem = await allProductsCollection.deleteOne(query)
             // console.log(deleteReportedItem)
             res.send(deleteReportedItem)
@@ -373,7 +366,7 @@ async function run() {
         app.delete('/allProducts/:id', verifyJwt, verifySeller, async (req, res) => {
             const id = req.params.id
             // console.log(id)
-            const query = { _id: ObjectId(id) }
+            const query = { _id: new ObjectId(id) }
             const result = await allProductsCollection.deleteOne(query)
             // console.log(result)
             res.send(result);
@@ -381,7 +374,7 @@ async function run() {
         app.put('/advertisedProducts/:id', verifyJwt, verifySeller, async (req, res) => {
             const id = req.params.id
             // console.log(id)
-            const query = { _id: ObjectId(id) }
+            const query = { _id: new ObjectId(id) }
             const updatedDoc = {
                 $set: {
                     advertised: true
@@ -449,7 +442,7 @@ async function run() {
         app.put('/bookedProducts/status-booked/:id', verifyJwt, verifyBuyer, async (req, res) => {
             const id = req.params.id
             // console.log(id)
-            const query = { _id: ObjectId(id) }
+            const query = { _id: new ObjectId(id) }
             const options = { upsert: true }
             const updateDoc = {
                 $set: {
@@ -463,7 +456,7 @@ async function run() {
         app.put('/bookedProducts/status-booked/:id', verifyJwt, verifyBuyer, async (req, res) => {
             const id = req.params.id
             // console.log(id)
-            const query = { _id: ObjectId(id) }
+            const query = { _id: new ObjectId(id) }
             const options = { upsert: true }
             const updateDoc = {
                 $set: {
@@ -477,7 +470,7 @@ async function run() {
         app.delete('/bookedProducts/:id', verifyJwt, verifyBuyer, async (req, res) => {
             const id = req.params.id
             // console.log(id)
-            const query = { _id: ObjectId(id) }
+            const query = { _id: new ObjectId(id) }
             const result = await bookedProductCollection.deleteOne(query)
             // console.log(result)
             res.send(result);
@@ -494,9 +487,9 @@ run().catch(console.log)
 
 
 app.get('/', (req, res) => {
-    res.send("Time Craft server is running!")
+    res.send("Gaming server is running!")
 })
 
 app.listen(port, () => {
-    console.log(`Time Craft server running on ${port} `)
+    console.log(`Gaming server running on ${port}`.yellow.bold)
 })
